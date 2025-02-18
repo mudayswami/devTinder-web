@@ -1,25 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import { useNavigate } from "react-router-dom";
+
+import { BASE_URL } from "../utils/constants";
 const Login = () => {
 
-    const [emailId, setEmailId] = useState("");
-    const [password, setPassword] = useState("");
-    const dispatch = useDispatch();
     const navigate = useNavigate();
+    const user = useSelector((store) => store.user);
+    useEffect(() => {
+        if (user) {
+            return navigate("/");
+        }
+    }, [user])
+
+    const [emailId, setEmailId] = useState("Meher@gmail.com");
+    const [password, setPassword] = useState("Meher@123");
+    const [err, setErr] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [age, setAge] = useState("");
+    const [isSignup, setIsSignup] = useState(false);
+    const [gender, setGender] = useState("");
+    const dispatch = useDispatch();
     const signIn = async () => {
         try {
-            const res = await axios.post("http://localhost:7777/login", { email: emailId, password }, { withCredentials: true });
+            const res = await axios.post(BASE_URL + "/login", { email: emailId, password }, { withCredentials: true });
             dispatch(addUser(res.data));
-            return navigate("/")
+            return navigate("/");
         } catch (err) {
-            console.log(err.message);
+            setErr(err.response.data);
+        }
+    }
+
+    const signUp = async () => {
+        try {
+            const res = await axios.post(BASE_URL + "/signup", { firstName: firstName, lastName: lastName, age: age, emailId, password, gender })
+            dispatch(addUser(res.data));
+            return navigate("/");
+        } catch (err) {
+            setErr(err.response.data);
         }
     }
     return (
-        <div className="justify-center items-center h-screen flex"><div className="card bg-base-100 w-96 shadow-xl  ">
+        <div className=" h-full w-full bg-pink-400 rounded-md bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-30 border border-gray-100 justify-center items-center h-screen flex"><div className="card bg-base-100 w-96 shadow-xl  ">
+            <h1 className="m-4 font-bold text-center text-xl">{isSignup ? "Sign Up" : "Login"}</h1>
             <div className="card-body">
                 <label className="input input-bordered flex items-center gap-2">
                     <svg
@@ -34,6 +60,29 @@ const Login = () => {
                     </svg>
                     <input type="text" className="grow" placeholder="Email" onChange={(e) => { setEmailId(e.target.value) }} />
                 </label>
+
+                {isSignup && (<><label className="input input-bordered flex items-center gap-2">
+                    <input type="text" className="grow" placeholder="First Name" onChange={(e) => { setFirstName(e.target.value) }} />
+                </label>
+                    <label className="input input-bordered flex items-center gap-2">
+                        <input type="text" className="grow" placeholder="Last Name" onChange={(e) => { setLastName(e.target.value) }} />
+                    </label>
+                    <label className="input input-bordered flex items-center gap-2">
+                        <input type="Number" className="grow" placeholder="Age" onChange={(e) => { setAge(e.target.value) }} />
+                    </label>
+                    <div className="form-control">
+                    </div>
+                    <div className="form-control">
+                        <span className="badge">Gender</span>
+                        <label className="label cursor-pointer">
+                            <span className="label-text">Female</span>
+                            <input type="radio" name="gender" className="radio checked:bg-red-500" onClick={() => setGender("male")} />
+                            <span className="label-text">Male</span>
+                            <input type="radio" name="gender" className="radio checked:bg-blue-500" onClick={() => setGender("female")} />
+                        </label>
+                    </div>
+                </>)}
+
                 <label className="input input-bordered flex items-center gap-2">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +96,12 @@ const Login = () => {
                     </svg>
                     <input type="password" className="grow" placeholder="password" onChange={(e) => setPassword(e.target.value)} />
                 </label>
-                <button className="btn" onClick={signIn}>Login</button>
+                <p className="text-red-700" >{err}</p>
+                <button className="btn" onClick={isSignup ? signUp : signIn}>{isSignup ? "Sign Up" : "Login"}</button>
+
+                {!isSignup ? (<p className="underline mt-4" onClick={() => setIsSignup(true)}>Don't have account? SignUp</p>)
+                    : (<p className="underline mt-4" onClick={() => setIsSignup(false)}>Already have an account? Login</p>)
+                }
             </div>
         </div>
         </div>
